@@ -1,6 +1,8 @@
 // =========================== CONFIG ================================ //
 const express = require('express');
 const axios = require('axios');
+const multer = require('multer');
+
 const { Client } = require("@notionhq/client")
 
 const { Configuration, OpenAIApi } = require("openai");
@@ -31,6 +33,10 @@ const secretClient = new SecretManagerServiceClient();
 
 // Global variable for OpenAI password
 let openai;
+
+
+const upload = multer();
+
 
 // =========================== NOTION INTEGRATION ================================ //
 async function testNotion() {
