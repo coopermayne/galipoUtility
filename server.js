@@ -170,7 +170,7 @@ app.use('/', function (req, res, next) {
 
 async function fetchSecret() {
   const [version] = await secretClient.accessSecretVersion({
-    name: "projects/724936521060/secrets/OpenAI_API_Key/versions/1",
+    name: "projects/1080939268751/secrets/OpenAI_API_Key/versions/1",
   });
   const password_openai = version.payload.data.toString();
 
@@ -180,12 +180,12 @@ async function fetchSecret() {
   openai = new OpenAIApi(configuration);
 
   const [version2] = await secretClient.accessSecretVersion({
-    name: "projects/724936521060/secrets/Todoist_API_Key/versions/1",
+    name: "projects/1080939268751/secrets/todoisttoken/versions/1",
   });
   TODOIST_BEARER_TOKEN = version2.payload.data.toString();
 
   const [version3] = await secretClient.accessSecretVersion({
-    name: "projects/724936521060/secrets/notionToken/versions/1",
+    name: "projects/1080939268751/secrets/notionapikey/versions/1",
   });
   NOTION_TOKEN = version3.payload.data.toString();
 
