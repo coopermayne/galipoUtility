@@ -1,4 +1,7 @@
 const express = require('express');
+const ffmpeg = require('fluent-ffmpeg');
+const fs = require('fs');
+
 const multer = require('multer');
 const { v4: uuidv4 } = require('uuid');
 const { Storage } = require('@google-cloud/storage');
@@ -20,16 +23,31 @@ router.post('/', upload.single('audio'), async (req, res) => {
   // const file = req.file;
   const bucketName = 'main_bucket3214';
 
-  // const filename = `${uuidv4()}_${file.originalname}`;
+  const file = req.file;
+  const fileName = file.originalname;
 
-  // // Upload the audio file to Google Cloud Storage
-  // await storage.bucket(bucketName).upload(file.path, {
-  //   destination: filename,
-  // });
-
-  // Get the GCS URI for the uploaded audio file
-  // const gcsUri = `gs://${bucketName}/${filename}`;
-  const gcsUri = "gs://main_bucket3214/my_voice.wav"
+  // Convert audio file to WAV using FFmpeg
+  const convertedFileName = `converted_${fileName}_${uuidv4()}.wav`;
+  const convertedFile = storage.bucket(bucketName).file(convertedFileName);
+  await new Promise((resolve, reject) => {
+    ffmpeg(file.path)
+      .audioChannels(1) // Convert to mono (single channel)
+      .toFormat('wav')
+      .output(convertedFile.createWriteStream({ resumable: false }))
+      .on('end', () => {
+        // Remove the original file
+        fs.unlinkSync(file.path);
+        console.log('Conversion completed successfully');
+        resolve();
+      })
+      .on('error', (error) => {
+        // Handle any errors that occur during conversion
+        console.error('Error converting file:', error);
+        reject(error);
+      })
+      .run();
+  });
+  const gcsUri = `gs://${bucketName}/${convertedFileName}`;
 
   io.emit('transcribeStatus', 'Transcription started, please wait...');
 
@@ -53,7 +71,7 @@ router.post('/', upload.single('audio'), async (req, res) => {
         .map((result) => result.alternatives[0].transcript)
         .join('\n');
 
-        const fileName = "transcriptions.txt";
+        const fileName = `transcriptions_${uuidv4()}.txt`;
         const file = storage.bucket(bucketName).file(fileName);
         file.save(transcription, function(err) {
           if (!err) {
@@ -70,6 +88,8 @@ router.post('/', upload.single('audio'), async (req, res) => {
     });
   
   res.render('transcribe', { transcription: 'Processing...' });
+
 });
 
 module.exports = router;
+
