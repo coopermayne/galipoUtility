@@ -40,6 +40,7 @@ app.use((req, res, next) => {
 });
 
 // Routes
+app.use(express.urlencoded({ extended: true }));
 app.use('/', require('./routes/index'));
 app.use('/login', require('./routes/login'));
 app.use('/transcribe', require('./routes/transcribe'));

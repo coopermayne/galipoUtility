@@ -11,8 +11,24 @@
     <button type="submit">Transcribe</button>
   </form>
 
-  <h2 id="status"></h2>
-  <textarea id="result" readonly style="width: 100%; height: 200px;"></textarea>
+  <table>
+    <tr>
+      <th>Original File Name</th>
+      <th>Transcription Status</th>
+      <th>Notes</th>
+      <th>Actions</th>
+    </tr>
+    <% transcriptions.forEach(transcription => { %>
+      <tr>
+        <td><%= transcription.originalFileName || '' %></td>
+        <td><%= transcription.transcriptionStatus ? 'Complete' : 'Processing' %></td>
+        <td><%= transcription.notes || '' %></td>
+        <td>
+          <a href="/transcribe/<%= transcription[datastore.KEY].name %>">View</a>
+        </td>
+      </tr>
+    <% }); %>
+  </table>
 
   <script src="js/socket.io.js"></script>
   <script src="js/transcribe.js"></script>
