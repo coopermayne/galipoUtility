@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" href="https://unpkg.com/chota@latest">
+
+  <link rel="stylesheet" type="text/css" href="/css/main.css">
+  <% if (typeof customRoute !== 'undefined') { %>
+    <link rel="stylesheet" type="text/css" href="/css/<%=customRoute %>.css">
+<% } %>
+<title><%= title ? title : 'Default Title' %></title>
+
+</head>
+<body>
+<div class="container">
+<h1><%= title ? title : 'Default Title' %></h1>

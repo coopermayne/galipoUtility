@@ -1,0 +1,19 @@
+
+  .upload-form {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  
+  .file-input {
+    flex-grow: 1;
+  }
+  
+  .submit-btn {
+    background-color: #007BFF;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+  }

@@ -1,27 +1,26 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <link rel="stylesheet" type="text/css" href="/css/main.css">
-</head>
-<body>
-  <h1>View Transcription</h1>
+<%- include('layouts/layout_header') %>
 
-  <p>Original File Name: <%= transcription.originalFileName || '' %></p>
-  <p>Transcription Status: <%= transcription.transcriptionStatus ? 'Complete' : 'Processing' %></p>
-  <p>Notes: <%= transcription.notes || '' %></p>
-  <p>Transcription:</p>
-  <div class="transcription">
-    <%- textHtml %>
-  </div>
+<div class="top-links">
+  <a href="/transcribe" class="back-link">Back</a>
+  <form action="/transcribe/<%= transcription[datastore.KEY].name %>/delete" method="POST" class="delete-form">
+    <button type="submit" class="delete-btn">Delete</button>
+  </form>
+</div>
+
+<audio controls id="audioPlayer" style="width: 100%;">
+  <source src="<%= audioUrl %>" type="audio/wav">
+  Your browser does not support the audio element.
+</audio>
+
+<div class="metadata">
+  <p><strong>Original File Name:</strong> <%= transcription.originalFileName || '' %></p>
+  <p><strong>Transcription Status:</strong> <%= transcription.transcriptionStatus ? 'Complete' : 'Processing' %></p>
+  <p><strong>Notes:</strong> <%= transcription.notes || '' %></p>
+</div>
+
+<div class="transcription">
+  <%- textHtml %>
+</div>
 
 
-  <audio controls id="audioPlayer" >
-    <source src="<%= audioUrl %>" type="audio/wav">
-    Your browser does not support the audio element.
-  </audio>
-  <br \>
-  <a href="/transcribe">Back to Transcriptions</a>
-
-  <script src="/js/view_transcription.js"></script>
-</body>
-</html>
+<%- include('layouts/layout_footer') %>

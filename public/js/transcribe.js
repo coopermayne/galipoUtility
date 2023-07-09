@@ -7,4 +7,3 @@ document.addEventListener('DOMContentLoaded', () => {
     socket.on('transcribeResult', (transcription) => {
     });
   });
-  

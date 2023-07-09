@@ -40,7 +40,12 @@ router.get('/', async (req, res) => {
   try {
     const query = datastore.createQuery('transcription');
     const [transcriptions] = await datastore.runQuery(query);
-    res.render('transcribe', { transcriptions, datastore });
+    res.render('transcribe', { 
+      transcriptions, 
+      datastore, 
+      title: 'Transcription', 
+      customRoute: 'transcribe'
+    });
   } catch (error) {
     console.error('ERROR:', error);
     res.status(500).send('An error occurred');
@@ -78,15 +83,33 @@ router.get('/:id', async (req, res) => {
         return `<p class="sentence">${sentenceSpans.join(' ')}</p>`;
       })
     );
-    
+
     const html = spans.join(' ');
 
     // Render the view_transcription page with the retrieved transcription data
-    res.render('view_transcription', { textHtml: html, audioUrl: audioUrl, transcription: data || {} });
+    res.render('view_transcription', { 
+      textHtml: html, 
+      audioUrl: audioUrl,
+      datastore: datastore,
+      title: "Transcription",
+      customRoute: "view_transcription",
+      transcription: data || {} });
   } catch (error) {
     console.error('ERROR:', error);
     // Handle any errors that occur during retrieval
     res.status(500).send('An error occurred while retrieving the transcription');
+  }
+});
+
+router.post('/:id/delete', async (req, res) => {
+  const id = req.params.id;
+  const transcriptionKey = datastore.key(['transcription', id]);
+  try {
+    await datastore.delete(transcriptionKey);
+    res.redirect('/transcribe');
+  } catch (error) {
+    console.error('ERROR:', error);
+    res.status(500).send('An error occurred');
   }
 });
 
@@ -208,19 +231,3 @@ router.post('/', upload.single('audio'), async (req, res) => {
 });
 
 module.exports = router;
-
-// data: [
-//   { name: 'audioFileLink', value: data.audioFileLink, excludeFromIndexes: false },
-//   { name: 'transcriptionJson', value: data.jsonTranscriptionLink, excludeFromIndexes: false },
-//   { name: 'createdTime', value: data.createdTime, excludeFromIndexes: false },
-//   { name: 'updatedTime', value: data.updatedTime, excludeFromIndexes: false },
-//   { name: 'caseName', value: data.caseName, excludeFromIndexes: false },
-//   { name: 'notes', value: data.notes, excludeFromIndexes: false },
-//   { name: 'transcriptionStatus', value: data.transcriptionStatus, excludeFromIndexes: false },
-//   { name: 'uploadStatus', value: data.uploadStatus, excludeFromIndexes: false },
-//   { name: 'title', value: data.title, excludeFromIndexes: false },
-//   { name: 'duration', value: data.duration, excludeFromIndexes: false },
-//   { name: 'wordLength', value: data.wordLength, excludeFromIndexes: false },
-//   { name: 'summary', value: data.summary, excludeFromIndexes: false },
-//   { name: 'highlights', value: JSON.stringify(data.highlights), excludeFromIndexes: false },
-// ],

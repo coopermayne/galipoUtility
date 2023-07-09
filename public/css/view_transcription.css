@@ -1,0 +1,51 @@
+
+.metadata {
+  background-color: #f8f9fa;
+  border-radius: 5px;
+  padding: 20px;
+  margin: 20px 0;
+}
+
+.metadata p {
+  margin: 10px 0;
+}
+
+.metadata p:first-child {
+  margin-top: 0;
+}
+
+.metadata p:last-child {
+  margin-bottom: 0;
+}
+
+.transcription {
+    background-color: #f8f9fa;
+    border-radius: 5px;
+    padding: 20px;
+    margin-top: 20px;
+    font-size: 16px;
+    line-height: 1.5;
+}
+
+.top-links {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.delete-form {
+  margin: 0;
+}
+
+.delete-btn {
+  background: none;
+  border: none;
+  color: #dc3545;
+  cursor: pointer;
+  padding: 0;
+}
+
+.delete-btn:hover {
+  text-decoration: underline;
+}

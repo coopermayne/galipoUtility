@@ -1,36 +1,31 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <link rel="stylesheet" type="text/css" href="css/main.css">
-</head>
-<body>
-  <h1>Transcribe</h1>
+<%- include('layouts/layout_header') %>
 
-  <form action="/transcribe" method="post" enctype="multipart/form-data">
-    <input type="file" name="audio" accept="audio/*" required>
-    <button type="submit">Transcribe</button>
-  </form>
+<a href="/index" class="back-link">Back</a>
 
-  <table>
+<form action="/transcribe" method="post" enctype="multipart/form-data" class="upload-form">
+  <input type="file" name="audio" accept="audio/*" required class="file-input">
+  <button type="submit" class="submit-btn">Transcribe</button>
+</form>
+
+<table>
+  <tr>
+    <th>Original File Name</th>
+    <th>Transcription Status</th>
+    <th>Notes</th>
+    <th>Actions</th>
+
+  </tr>
+  <% transcriptions.forEach(transcription => { %>
     <tr>
-      <th>Original File Name</th>
-      <th>Transcription Status</th>
-      <th>Notes</th>
-      <th>Actions</th>
-    </tr>
-    <% transcriptions.forEach(transcription => { %>
-      <tr>
-        <td><%= transcription.originalFileName || '' %></td>
-        <td><%= transcription.transcriptionStatus ? 'Complete' : 'Processing' %></td>
-        <td><%= transcription.notes || '' %></td>
-        <td>
-          <a href="/transcribe/<%= transcription[datastore.KEY].name %>">View</a>
-        </td>
-      </tr>
-    <% }); %>
-  </table>
+      <td><%= transcription.originalFileName || '' %></td>
+      <td><%= transcription.transcriptionStatus ? 'Complete' : 'Processing' %></td>
+      <td><%= transcription.notes || '' %></td>
+      <td>
+        <a href="/transcribe/<%= transcription[datastore.KEY].name %>">View</a>
+      </td>
 
-  <script src="js/socket.io.js"></script>
-  <script src="js/transcribe.js"></script>
-</body>
-</html>
+    </tr>
+  <% }); %>
+</table>
+
+<%- include('layouts/layout_footer') %>

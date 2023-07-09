@@ -1,20 +1,10 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <link rel="stylesheet" type="text/css" href="css/main.css">
-</head>
-<body>
-  <h1>Welcome</h1>
-  <ul>
-    <li><a href="/transcribe">Transcribe</a></li>
-    <li><a href="/analyze">Analyze</a></li>
-    <li><a href="/learn">Learn</a></li>
-  </ul>
+<%- include('layouts/layout_header') %>
 
-  <script src="js/main.js"></script>
+<ul>
+  <li><a href="/transcribe">Transcribe</a></li>
+  <li><a href="/analyze">Analyze</a></li>
+  <li><a href="/learn">Learn</a></li>
+</ul>
 
-    <!-- Socket -->
-  <script src="js/socket.io.js"></script>
 
-</body>
-</html>
+<%- include('layouts/layout_footer') %>
