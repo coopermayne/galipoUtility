@@ -66,7 +66,20 @@ router.get('/:id', async (req, res) => {
 
 
     // Get formatted text...
-    const transcriptionJson = JSON.parse(data.transcriptionJson);
+    let transcriptionJson;
+
+    try {
+      transcriptionJson = JSON.parse(data.transcriptionJson);
+    } catch (error) {
+      res.render('view_transcription', { 
+        textHtml: "", 
+        audioUrl: "",
+        datastore: datastore,
+        title: "Transcription",
+        customRoute: "view_transcription",
+        transcription: data || {} });
+      return;
+    }
 
     const formatTime = (seconds, nanos) => {
       const formattedSeconds = seconds || '0';
@@ -227,7 +240,12 @@ router.post('/', upload.single('audio'), async (req, res) => {
 
   const query = datastore.createQuery('transcription');
   const [transcriptions] = await datastore.runQuery(query);
-  res.render('transcribe', { transcriptions, datastore });
+  res.render('transcribe', { 
+    transcriptions, 
+    datastore, 
+    title: 'Transcription', 
+    customRoute: 'transcribe'
+  });
 });
 
 module.exports = router;
