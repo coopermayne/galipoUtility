@@ -60,8 +60,29 @@ router.get('/:id', async (req, res) => {
     const audioUrl = `http://storage.googleapis.com/${bucketName}/${objectName}`;
 
 
+    // Get formatted text...
+    const transcriptionJson = JSON.parse(data.transcriptionJson);
+
+    const formatTime = (seconds, nanos) => {
+      const formattedSeconds = seconds || '0';
+      const formattedNanos = nanos || '0';
+      return parseFloat(`${formattedSeconds}.${formattedNanos}`);
+    };
+
+    const spans = transcriptionJson.results.flatMap((result) =>
+      result.alternatives.flatMap((alternative) => {
+        const sentenceSpans = alternative.words.map((word) =>
+          `<span data-start-time="${formatTime(word.startTime.seconds, word.startTime.nanos)}"
+                data-end-time="${formatTime(word.endTime.seconds, word.endTime.nanos)}">${word.word}</span>`
+        );
+        return `<p class="sentence">${sentenceSpans.join(' ')}</p>`;
+      })
+    );
+    
+    const html = spans.join(' ');
+
     // Render the view_transcription page with the retrieved transcription data
-    res.render('view_transcription', { audioUrl: audioUrl, transcription: data || {} });
+    res.render('view_transcription', { textHtml: html, audioUrl: audioUrl, transcription: data || {} });
   } catch (error) {
     console.error('ERROR:', error);
     // Handle any errors that occur during retrieval

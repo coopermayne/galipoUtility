@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <link rel="stylesheet" type="text/css" href="css/main.css">
+  <link rel="stylesheet" type="text/css" href="/css/main.css">
 </head>
 <body>
   <h1>View Transcription</h1>
@@ -9,12 +9,19 @@
   <p>Original File Name: <%= transcription.originalFileName || '' %></p>
   <p>Transcription Status: <%= transcription.transcriptionStatus ? 'Complete' : 'Processing' %></p>
   <p>Notes: <%= transcription.notes || '' %></p>
+  <p>Transcription:</p>
+  <div class="transcription">
+    <%- textHtml %>
+  </div>
 
-  <audio controls>
+
+  <audio controls id="audioPlayer" >
     <source src="<%= audioUrl %>" type="audio/wav">
     Your browser does not support the audio element.
   </audio>
   <br \>
   <a href="/transcribe">Back to Transcriptions</a>
+
+  <script src="/js/view_transcription.js"></script>
 </body>
 </html>
