@@ -1,9 +1,14 @@
 document.addEventListener('DOMContentLoaded', () => {
     const socket = io();
   
-    socket.on('transcribeStatus', (status) => {
+    socket.on('uploadFinished', (status) => {
     });
   
-    socket.on('transcribeResult', (transcription) => {
+    socket.on('transcribeFinished', (transcription) => {
     });
-  });
+
+    socket.on('processFileComplete', (id) => {
+      location.reload();  
+    });
+});
+
