@@ -52,7 +52,7 @@ module.exports = function(io) {
         .on('end', () => {
           // Remove the original file
           fs.unlinkSync(file.path);
-          console.log('Conversion completed successfully');
+          io.emit('converionFinished', id)
           resolve();
         })
         .on('error', (error) => {
@@ -76,7 +76,7 @@ module.exports = function(io) {
     const maxRetries = 20; // set your max retries here
     const delay = 1000; // delay in milliseconds between each retry
 
-    const checkFileExists = async () => {
+    const checkFileExists = async (id) => {
         const [exists] = await storage.bucket(bucketName).file(convertedFileName).exists();
         fileExists = exists;
         if (fileExists || retries >= maxRetries) {
@@ -98,6 +98,8 @@ module.exports = function(io) {
             
             operation
               .on('complete', async (result, apiResponse) => {
+                io.emit('transcriptionFinished', { id: id });
+
                 const transcription = result.results
                   .map((result) => result.alternatives[0].transcript)
                   .join('\n');
@@ -144,7 +146,7 @@ module.exports = function(io) {
         }
     }
 
-    checkFileExists();
+    checkFileExists(id);
   }
 
   router.post('/', upload.single('audio'), async (req, res) => {

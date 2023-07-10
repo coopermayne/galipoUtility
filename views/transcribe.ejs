@@ -22,6 +22,7 @@
       <td><%= transcription.originalFileName || '' %></td>
       <td><%= transcription.transcriptionStatus ? 'Complete' : 'Processing' %></td>
       <td><%= transcription.notes || '' %></td>
+      <td><%= transcription[datastore.KEY].path.join('/') %></td>
       <td>
         <a href="/transcribe/<%= transcription[datastore.KEY].name %>">View</a>
       </td>
