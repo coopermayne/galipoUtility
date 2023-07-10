@@ -19,6 +19,7 @@ module.exports = function(io) {
   const client = new speech.SpeechClient();
 
   const upsertRecord = async (kind, id, data) => {
+    console.log(`ID:${id}`)
     const key = datastore.key([kind, id]);
     
     const entity = {
@@ -44,28 +45,36 @@ module.exports = function(io) {
     // Convert audio file to WAV using FFmpeg
     const convertedFileName = `converted_${file.originalname}_${uuidv4()}.wav`;
     const convertedFile = storage.bucket(bucketName).file(convertedFileName);
-    await new Promise((resolve, reject) => {
-      ffmpeg(file.path)
-        .audioChannels(1) // Convert to mono (single channel)
-        .toFormat('wav')
-        .output(convertedFile.createWriteStream({ resumable: false }))
-        .on('end', () => {
-          // Remove the original file
-          fs.unlinkSync(file.path);
-          io.emit('converionFinished', id)
-          resolve();
-        })
-        .on('error', (error) => {
-          // Handle any errors that occur during conversion
-          console.error('Error converting file:', error);
-          reject(error);
-        })
-        .run();
+
+    const uploadStream = convertedFile.createWriteStream({ resumable: false });
+
+    // Handle the 'finish' event of the upload stream
+    uploadStream.on('finish', () => {
+      // Remove the original file
+      fs.unlinkSync(file.path);
+      io.emit('converionFinished', id);
     });
+
+    // Handle the 'error' event of the upload stream
+    uploadStream.on('error', (error) => {
+      // Handle any errors that occur during upload
+      console.error('Error uploading file:', error);
+    });
+
+    // Convert the audio file to WAV format and pipe the output to the upload stream
+    ffmpeg(file.path)
+      .audioChannels(1) // Convert to mono (single channel)
+      .toFormat('wav')
+      .output(uploadStream)
+      .on('error', (error) => {
+        // Handle any errors that occur during conversion
+        console.error('Error converting file:', error);
+      })
+      .run();
+    
     const gcsUri = `gs://${bucketName}/${convertedFileName}`;
     const httpUrl = `https://storage.googleapis.com/${bucketName}/${convertedFileName}`;
 
-    
     const secondData = {...initialData, ...{uploadStatus: true, audioFileGs: gcsUri, audioFileHttp: httpUrl}}
     // Create an entity object with the key and data
     upsertRecord('transcription', id, secondData)
@@ -95,9 +104,8 @@ module.exports = function(io) {
             const request = { audio: audio, config: config };
             
             const [operation] = await client.longRunningRecognize(request);
-            
             operation
-              .on('complete', async (result, apiResponse) => {
+              .on('complete', ((id) => async (result, apiResponse) => {
                 io.emit('transcriptionFinished', { id: id });
 
                 const transcription = result.results
@@ -130,19 +138,20 @@ module.exports = function(io) {
                   transcriptionHtml: htmlSpans, // Save the HTML spans to the database
                 };
           
-                thirdData = {...secondData, ...tdata}
-          
+                const thirdData = {...secondData, ...tdata}
+                console.log(`Third: ${id}`)
                 await upsertRecord('transcription', id, thirdData)
 
                 io.emit('processFileComplete', { id: id });
-
-              })
+              })(id)) // pass `id` when the outer function is called
               .on('error', (error) => {
                 console.error(`Error: ${error}`);
               });
         } else {
             retries++;
-            setTimeout(checkFileExists, delay);
+            setTimeout(function(){
+              checkFileExists(id)
+            }, delay);
         }
     }
 
@@ -151,9 +160,9 @@ module.exports = function(io) {
 
   router.post('/', upload.single('audio'), async (req, res) => {
     const id = uuidv4();
+    console.log(id)
 
     const initialData = {
-      id: id,
       originalFileName: req.file.originalname,
       newFileName: 'generating...',
       notes: "",
