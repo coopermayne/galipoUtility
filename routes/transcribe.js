@@ -19,7 +19,6 @@ module.exports = function(io) {
   const client = new speech.SpeechClient();
 
   const upsertRecord = async (kind, id, data) => {
-    console.log(`ID:${id}`)
     const key = datastore.key([kind, id]);
     
     const entity = {
@@ -33,7 +32,6 @@ module.exports = function(io) {
 
     try {
       await datastore.save(entity);
-      console.log(`Upserted ${key}: ${data}`);
     } catch (err) {
       console.error('ERROR:', err);
     }
@@ -55,7 +53,7 @@ module.exports = function(io) {
                 .toFormat('wav')
                 .output(uploadStream)
                 .on('progress', function(progress) {
-                  io.emit('upload progress', progress.percent)
+                  io.emit('upload progress', {id: id, progress: progress.percent})
                 })      
                 .on('error', reject)
                 .on('end', resolve)
@@ -149,7 +147,6 @@ module.exports = function(io) {
                 };
           
                 const thirdData = {...secondData, ...tdata}
-                console.log(`Third: ${id}`)
                 await upsertRecord('transcription', id, thirdData)
 
                 io.emit('processFileComplete', { id: id });
@@ -160,23 +157,27 @@ module.exports = function(io) {
           });
   }
 
-  router.post('/', upload.single('audio'), async (req, res) => {
-    const id = uuidv4();
-    console.log(id)
+  router.post('/', upload.array('audio', 12), async (req, res) => { // 12 is the maxCount
+    // req.files is an array of `audio` files
+    // each file will be processed and saved in the datastore
 
-    const initialData = {
-      originalFileName: req.file.originalname,
-      newFileName: 'generating...',
-      notes: "",
-      transcriptionStatus: false,
-      uploadStatus: false
+    for(let file of req.files) {
+        const id = uuidv4();
+
+        const initialData = {
+          originalFileName: file.originalname,
+          newFileName: 'generating...',
+          notes: "",
+          transcriptionStatus: false,
+          uploadStatus: false
+        }
+
+        // Save initial data to the database
+        await upsertRecord('transcription', id, initialData)
+
+        // Start processing the file asynchronously
+        processFile(file, id, initialData);
     }
-
-    // Save initial data to the database
-    await upsertRecord('transcription', id, initialData)
-
-      // Start processing the file asynchronously
-    processFile(req.file, id, initialData);
 
     // Redirect the user to the view page for this transcription
     res.redirect(`/transcribe`);
