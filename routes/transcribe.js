@@ -41,73 +41,83 @@ module.exports = function(io) {
 
   async function processFile(file, id, initialData) {
     const bucketName = 'main_bucket3214';
-
     // Convert audio file to WAV using FFmpeg
     const convertedFileName = `converted_${file.originalname}_${uuidv4()}.wav`;
     const convertedFile = storage.bucket(bucketName).file(convertedFileName);
-
     const uploadStream = convertedFile.createWriteStream({ resumable: false });
-
-    // Handle the 'finish' event of the upload stream
-    uploadStream.on('finish', () => {
-      // Remove the original file
-      fs.unlinkSync(file.path);
-      io.emit('converionFinished', id);
-    });
-
-    // Handle the 'error' event of the upload stream
-    uploadStream.on('error', (error) => {
-      // Handle any errors that occur during upload
-      console.error('Error uploading file:', error);
-    });
-
+    const fileSize = fs.statSync(file.path).size;
+    let uploadedBytes = 0;
     // Convert the audio file to WAV format and pipe the output to the upload stream
-    ffmpeg(file.path)
-      .audioChannels(1) // Convert to mono (single channel)
-      .toFormat('wav')
-      .output(uploadStream)
-      .on('error', (error) => {
-        // Handle any errors that occur during conversion
-        console.error('Error converting file:', error);
-      })
-      .run();
-    
+    try {
+        await new Promise((resolve, reject) => {
+            ffmpeg(file.path)
+                .audioChannels(1) // Convert to mono (single channel)
+                .toFormat('wav')
+                .output(uploadStream)
+                .on('progress', function(progress) {
+                  io.emit('upload progress', progress.percent)
+                })      
+                .on('error', reject)
+                .on('end', resolve)
+                .run();
+
+            // Handle the 'finish' event of the upload stream
+            uploadStream.on('finish', () => {
+                // Remove the original file
+                fs.unlinkSync(file.path);
+                io.emit('conversionFinished', id);
+                resolve();
+            });
+
+            // Handle the 'error' event of the upload stream
+            uploadStream.on('error', (error) => {
+                // Handle any errors that occur during upload
+                console.error('Error uploading file:', error);
+                reject(error);
+            });
+        });
+    } catch (err) {
+        console.error('Error converting file:', err);
+        return;
+    }
+    io.emit('uploadFinished', { id: id });
+
     const gcsUri = `gs://${bucketName}/${convertedFileName}`;
     const httpUrl = `https://storage.googleapis.com/${bucketName}/${convertedFileName}`;
 
     const secondData = {...initialData, ...{uploadStatus: true, audioFileGs: gcsUri, audioFileHttp: httpUrl}}
     // Create an entity object with the key and data
-    upsertRecord('transcription', id, secondData)
-    
-    // Start a poll to check if file exists before proceeding to transcription
-    let fileExists = false;
+    await upsertRecord('transcription', id, secondData)
+
+    // Check if file exists before proceeding to transcription
     let retries = 0;
     const maxRetries = 20; // set your max retries here
     const delay = 1000; // delay in milliseconds between each retry
 
-    const checkFileExists = async (id) => {
+    while (retries < maxRetries) {
         const [exists] = await storage.bucket(bucketName).file(convertedFileName).exists();
-        fileExists = exists;
-        if (fileExists || retries >= maxRetries) {
-            if (!fileExists) {
-                console.error('Error: File not found in Google Cloud Storage after all retries.');
-                return;
-            }
-            
-            const audio = { uri: gcsUri };
-            const config = {
-              enableAutomaticPunctuation: true,
-              enableWordTimeOffsets: true,
-              languageCode: 'en-US' 
-            };
+        if (exists) break;
+        retries++;
+        await new Promise(resolve => setTimeout(resolve, delay));  // delay before next check
+    }
 
-            const request = { audio: audio, config: config };
-            
-            const [operation] = await client.longRunningRecognize(request);
-            operation
-              .on('complete', ((id) => async (result, apiResponse) => {
-                io.emit('transcriptionFinished', { id: id });
+    if (retries >= maxRetries) {
+        console.error('Error: File not found in Google Cloud Storage after all retries.');
+        return;
+    }
 
+    const audio = { uri: gcsUri };
+    const config = {
+        enableAutomaticPunctuation: true,
+        enableWordTimeOffsets: true,
+        languageCode: 'en-US'
+    };
+    const request = { audio: audio, config: config };
+    const [operation] = await client.longRunningRecognize(request);
+
+    operation
+        .on('complete', async (result, apiResponse) => {
+            io.emit('transcriptionFinished', { id: id });
                 const transcription = result.results
                   .map((result) => result.alternatives[0].transcript)
                   .join('\n');
@@ -143,19 +153,11 @@ module.exports = function(io) {
                 await upsertRecord('transcription', id, thirdData)
 
                 io.emit('processFileComplete', { id: id });
-              })(id)) // pass `id` when the outer function is called
-              .on('error', (error) => {
-                console.error(`Error: ${error}`);
-              });
-        } else {
-            retries++;
-            setTimeout(function(){
-              checkFileExists(id)
-            }, delay);
-        }
-    }
 
-    checkFileExists(id);
+          })
+          .on('error', (error) => {
+              console.error(`Error: ${error}`);
+          });
   }
 
   router.post('/', upload.single('audio'), async (req, res) => {
