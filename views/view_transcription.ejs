@@ -8,7 +8,7 @@
 </div>
 
 <audio controls id="audioPlayer" style="width: 100%;">
-  <source src="<%= audioUrl %>" type="audio/wav">
+  <source src="<%= transcription.audioFileHttp %>" type="audio/wav">
   Your browser does not support the audio element.
 </audio>
 
@@ -19,7 +19,7 @@
 </div>
 
 <div class="transcription">
-  <%- textHtml %>
+  <%- transcription.transcriptionHtml %>
 </div>
 
 
