@@ -26,7 +26,7 @@ module.exports = function(io) {
       data: Object.entries(data).map(([name, value]) => ({ 
         name, 
         value, 
-        excludeFromIndexes: ['transcriptionText', 'transcriptionJson'].includes(name) // Exclude transcriptionText and transcriptionJson from indexes
+        excludeFromIndexes: ['transcriptionText', 'transcriptionJson', 'transcriptionHtml'].includes(name) // Exclude transcriptionText and transcriptionJson from indexes
       })),
     };
 
@@ -154,7 +154,7 @@ module.exports = function(io) {
       id: id,
       originalFileName: req.file.originalname,
       newFileName: 'generating...',
-      notes: "testtest notedd",
+      notes: "",
       transcriptionStatus: false,
       uploadStatus: false
     }
