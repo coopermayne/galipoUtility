@@ -50,6 +50,7 @@ module.exports = function(io) {
         await new Promise((resolve, reject) => {
             ffmpeg(file.path)
                 .audioChannels(1) // Convert to mono (single channel)
+                .audioFrequency(16000) // Convert to 16kHz
                 .toFormat('wav')
                 .output(uploadStream)
                 .on('progress', function(progress) {
