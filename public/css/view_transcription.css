@@ -49,3 +49,13 @@
 .delete-btn:hover {
   text-decoration: underline;
 }
+#audioPlayer {
+  position: fixed;
+  left: 0; /* This will ensure the player starts from the left edge of the screen */
+  bottom: 0;
+  width: 100vw; /* Viewport width units will ensure the player spans the full width of the screen */
+  height: 50px;  /* you can adjust this as needed */
+  background: #f9f9f9;  /* change this to any color you want */
+  border-top: 1px solid #ccc;  /* add a border to the top of the audio player */
+  z-index: 1000;  /* this will ensure the audio player is always on top */
+}

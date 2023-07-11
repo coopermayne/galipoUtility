@@ -7,10 +7,6 @@
   </form>
 </div>
 
-<audio controls id="audioPlayer" style="width: 100%;">
-  <source src="<%= transcription.audioFileHttp %>" type="audio/wav">
-  Your browser does not support the audio element.
-</audio>
 
 <div class="metadata">
   <p><strong>Original File Name:</strong> <%= transcription.originalFileName || '' %></p>
@@ -21,6 +17,12 @@
 <div class="transcription">
   <%- transcription.transcriptionHtml %>
 </div>
+
+
+<audio controls id="audioPlayer" style="width: 100%;">
+  <source src="<%= transcription.audioFileHttp %>" type="audio/wav">
+  Your browser does not support the audio element.
+</audio>
 
 
 <%- include('layouts/layout_footer') %>
